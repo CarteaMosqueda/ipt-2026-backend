@@ -12,21 +12,30 @@ initialize();
 async function initialize() {
     const { host, port, user, password, database } = config.database;
 
-    // Create DB if it doesn't exist
-    const connection = await mysql.createConnection({ host, port, user, password });
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
+    // Connect directly to database
+    const connection = await mysql.createConnection({
+        host,
+        port,
+        user,
+        password,
+        database
+    });
 
-    // Connect to DB
-    const sequelize = new Sequelize(database, user, password, { dialect: 'mysql' });
+    // Sequelize connection
+    const sequelize = new Sequelize(database, user, password, {
+        host,
+        port,
+        dialect: 'mysql'
+    });
 
     // Init models
     db.Account = accountModel(sequelize);
     db.RefreshToken = refreshTokenModel(sequelize);
 
-    // Define relationships
+    // Relationships
     db.Account.hasMany(db.RefreshToken, { onDelete: 'CASCADE' });
     db.RefreshToken.belongsTo(db.Account);
 
-    // Sync models with database
+    // Sync
     await sequelize.sync();
 }
